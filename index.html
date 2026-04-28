@@ -1,99 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Contact on KakaoTalk</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact on KakaoTalk</title>
+    <style>
+        /* 基础样式 */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-<style>
-body{
-font-family: Arial, sans-serif;
-background:#FEE500;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-margin:0;
-}
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            background-color: #ffffff; /* 全屏后背景设为白色 */
+        }
 
-.card{
-background:white;
-padding:40px;
-border-radius:20px;
-text-align:center;
-box-shadow:0 10px 30px rgba(0,0,0,0.2);
-width:320px;
-}
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-h2{
-margin-bottom:20px;
-}
+        .card {
+            background: #ffffff;
+            width: 100%;      /* 宽度全屏 */
+            height: 100%;     /* 高度全屏 */
+            max-width: none;  /* 移除最大宽度限制 */
+            padding: 40px 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* 内容垂直居中 */
+            align-items: center;
+            text-align: center;
+        }
 
-button{
-width:100%;
-padding:14px;
-margin-top:10px;
-border:none;
-border-radius:10px;
-font-size:16px;
-cursor:pointer;
-}
+        h2 {
+            margin-top: 0;
+            margin-bottom: 30px;
+            color: #3C1E1E;
+            font-size: 26px; /* 稍微调大一点适应全屏 */
+        }
 
-.open{
-background:#FEE500;
-font-weight:bold;
-}
+        /* QR Code 区域 */
+        .qr-container {
+            width: 320px;    /* 全屏模式下二维码可以稍微大一点 */
+            height: 420px;
+            background-color: #f9f9f9; 
+            margin-bottom: 35px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border: 1px solid #eeeeee;
+            position: relative;
+        }
 
-.add{
-background:#333;
-color:white;
-}
+        .qr-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            position: relative;
+            z-index: 1;
+        }
 
-.small{
-margin-top:15px;
-font-size:13px;
-color:#666;
-word-break:break-all;
-}
-</style>
+        .qr-container::before {
+            content: "QR CODE";
+            color: #ccc;
+            font-size: 14px;
+            font-weight: bold;
+            position: absolute;
+            z-index: 0;
+        }
+
+        /* 按钮样式 */
+        .add-button {
+            width: 100%;
+            max-width: 300px; /* 按钮不要太宽，保持易读性 */
+            background-color: #3C1E1E; 
+            color: #FEE500;
+            border: none;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .add-button:active {
+            background-color: #271414;
+            transform: scale(0.98);
+        }
+
+        /* 底部信息 */
+        .phone-number {
+            margin-top: 25px;
+            font-size: 18px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .footer-hint {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #888;
+            line-height: 1.6;
+        }
+    </style>
 </head>
-
 <body>
 
-<div class="card">
+    <div class="card">
+        <h2>Contact Me</h2>
 
-<h2>Contact Me</h2>
+        <div class="qr-container">
+            <img src="https://xzgplatform.oss-ap-southeast-3.aliyuncs.com/xzgtp/kakao.png" alt="KakaoTalk QR">
+        </div>
 
-<!-- Open Chat（你填你的链接） -->
-<button class="open" onclick="openChat()">
-Open Chat
-</button>
+        <button class="add-button" onclick="addFriend()">
+            Add on KakaoTalk
+        </button>
 
-<!-- Add Friend（你的手机号） -->
-<button class="add" onclick="addFriend()">
-Add via KakaoTalk
-</button>
+        <div class="phone-number">
+            +82 10-5389-3924
+        </div>
+        
+        <div class="footer-hint">
+            Scan the QR code or click the button<br>to add me as a friend.
+        </div>
+    </div>
 
-<div class="small">
-+82 10-5389-3924
-</div>
+    <script>
+        function addFriend() {
+            const phone = "821053893924";
+            const kakaoLink = "kakaotalk://addfriend/phone/" + phone;
+            
+            window.location.href = kakaoLink;
 
-</div>
-
-<script>
-
-// 👉 把这里换成你的 Open Chat 链接
-// const openChatLink = "https://open.kakao.com/o/xxxxx";
-
-function openChat(){
-window.location.href = openChatLink;
-}
-
-function addFriend(){
-window.location.href = "kakaotalk://addfriend/phone/821053893924";
-}
-
-</script>
+            setTimeout(function() {
+                alert("If KakaoTalk didn't open, please make sure the app is installed or search for the phone number manually.");
+            }, 2000);
+        }
+    </script>
 
 </body>
 </html>
