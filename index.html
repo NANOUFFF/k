@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact on KakaoTalk</title>
+
+<style>
+body{
+font-family: Arial, sans-serif;
+background:#FEE500;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+}
+
+.card{
+background:white;
+padding:40px;
+border-radius:20px;
+text-align:center;
+box-shadow:0 10px 30px rgba(0,0,0,0.2);
+width:320px;
+}
+
+h2{
+margin-bottom:20px;
+}
+
+button{
+width:100%;
+padding:14px;
+margin-top:10px;
+border:none;
+border-radius:10px;
+font-size:16px;
+cursor:pointer;
+}
+
+.open{
+background:#FEE500;
+font-weight:bold;
+}
+
+.add{
+background:#333;
+color:white;
+}
+
+.small{
+margin-top:15px;
+font-size:13px;
+color:#666;
+word-break:break-all;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>Contact Me</h2>
+
+<!-- Open Chat（你填你的链接） -->
+<button class="open" onclick="openChat()">
+Open Chat
+</button>
+
+<!-- Add Friend（你的手机号） -->
+<button class="add" onclick="addFriend()">
+Add via KakaoTalk
+</button>
+
+<div class="small">
++82 10-5389-3924
+</div>
+
+</div>
+
+<script>
+
+// 👉 把这里换成你的 Open Chat 链接
+// const openChatLink = "https://open.kakao.com/o/xxxxx";
+
+function openChat(){
+window.location.href = openChatLink;
+}
+
+function addFriend(){
+window.location.href = "kakaotalk://addfriend/phone/821053893924";
+}
+
+</script>
+
+</body>
+</html>
