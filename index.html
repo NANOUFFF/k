@@ -148,82 +148,31 @@
     <script>
         const kakaoId = "2362789630ooo";
         let isRedirecting = false;
-        let checkTimer = null;
-
-        function openAppWithDeepLink(url, isAddFriend = false) {
-            if (isRedirecting) return;
-            isRedirecting = true;
-
-            const ua = navigator.userAgent.toLowerCase();
-            const isAndroid = ua.indexOf("android") > -1;
-            const isIOS = /iphone|ipad|ipod/.test(ua);
-            const isMobile = isAndroid || isIOS;
-            const isDesktop = !isMobile;
-
-            if (isDesktop) {
-                showToast("This feature works best on mobile devices.");
-                if (isAddFriend) copyKakaoId(false);
-                isRedirecting = false;
-                return;
-            }
-
-            showToast("Opening KakaoTalk...");
-
-            let deepLinkUrl = url;
-            let fallbackUrl = isIOS ? 'https://apps.apple.com/kr/app/kakaotalk/id362057947' 
-                                   : 'https://play.google.com/store/apps/details?id=com.kakao.talk';
-
-            if (isAndroid && url.startsWith('kakaotalk://')) {
-                const path = url.replace('kakaotalk://', '');
-                deepLinkUrl = path ? `intent://${path}#Intent;scheme=kakaotalk;package=com.kakao.talk;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`
-                                   : `intent://#Intent;scheme=kakaotalk;package=com.kakao.talk;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
-            }
-
-            const handleAppOpen = () => {
-                clearTimeout(checkTimer);
-                document.removeEventListener('visibilitychange', handleVisibilityChange);
-                document.removeEventListener('pagehide', handlePageHide);
-                isRedirecting = false;
-            };
-
-            const handleVisibilityChange = () => {
-                if (document.hidden) {
-                    handleAppOpen();
-                }
-            };
-
-            const handlePageHide = () => {
-                handleAppOpen();
-            };
-
-            document.addEventListener('visibilitychange', handleVisibilityChange);
-            document.addEventListener('pagehide', handlePageHide);
-
-            window.location.href = deepLinkUrl;
-
-            checkTimer = setTimeout(() => {
-                document.removeEventListener('visibilitychange', handleVisibilityChange);
-                document.removeEventListener('pagehide', handlePageHide);
-                
-                const goToStore = confirm("KakaoTalk not found. Would you like to download it?");
-                if (goToStore) {
-                    window.location.href = fallbackUrl;
-                } else {
-                    showToast(isAddFriend ? "Please copy the ID and add manually." : "App not installed.");
-                    if (isAddFriend) copyKakaoId(false);
-                }
-                isRedirecting = false;
-            }, 3000);
-        }
 
         function addFriend() {
-            const kakaoUrl = `kakaotalk://addfriend?id=${kakaoId}`;
-            openAppWithDeepLink(kakaoUrl, true);
+            if (isRedirecting) return;
+            isRedirecting = true;
+            
+            const url = `kakaotalk://addfriend?id=${kakaoId}`;
+            window.location.href = url;
+            
+            setTimeout(() => {
+                showToast("If KakaoTalk didn't open, please copy ID: " + kakaoId);
+                copyKakaoId(false);
+                isRedirecting = false;
+            }, 1500);
         }
 
         function openKakaoTalk() {
-            const kakaoUrl = 'kakaotalk://';
-            openAppWithDeepLink(kakaoUrl, false);
+            if (isRedirecting) return;
+            isRedirecting = true;
+            
+            window.location.href = 'kakaotalk://';
+            
+            setTimeout(() => {
+                showToast("If KakaoTalk didn't open, please launch it manually.");
+                isRedirecting = false;
+            }, 1500);
         }
 
         function copyKakaoId(showFeedback = true) {
@@ -235,7 +184,7 @@
             document.body.removeChild(tempInput);
             
             if(showFeedback) {
-                showToast("Kakao ID copied to clipboard!");
+                showToast("Kakao ID copied: " + kakaoId);
             }
         }
 
@@ -245,7 +194,7 @@
             toast.style.display = "block";
             setTimeout(() => {
                 toast.style.display = "none";
-            }, 2500);
+            }, 3000);
         }
     </script>
 
