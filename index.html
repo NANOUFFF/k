@@ -44,29 +44,6 @@
             font-size: 26px;
         }
 
-        .qr-container {
-            width: 320px;
-            height: 420px;
-            background-color: #f9f9f9; 
-            margin-bottom: 35px;
-            border-radius: 12px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            border: 1px solid #eeeeee;
-            position: relative;
-        }
-
-        .qr-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            display: block;
-            position: relative;
-            z-index: 1;
-        }
-
         /* 按钮样式 */
         .add-button {
             width: 100%;
@@ -121,12 +98,8 @@
     <div class="card">
         <h2>Contact Me</h2>
 
-        <div class="qr-container">
-            <img src="https://xzgplatform.oss-ap-southeast-3.aliyuncs.com/xzgtp/kakao" alt="KakaoTalk QR">
-        </div>
-
         <button class="add-button" onclick="addFriend()">
-            QR코드 스캔해서 카톡 추가하기
+            카톡 친구 추가
         </button>
 
         <button class="add-button" onclick="openKakaoTalk()" style="margin-top: 15px;">
@@ -138,7 +111,7 @@
         </div>
         
         <div class="footer-hint">
-            Scan QR code, click button or <br><b>click ID to copy</b>.
+            Click button or <b>click ID to copy</b>.
         </div>
     </div>
 
