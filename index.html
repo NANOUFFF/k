@@ -150,7 +150,7 @@
         let isRedirecting = false;
         let checkTimer = null;
 
-        function openAppWithDeepLink(url, fallbackUrl, isAddFriend = false) {
+        function openAppWithDeepLink(url, isAddFriend = false) {
             if (isRedirecting) return;
             isRedirecting = true;
 
@@ -159,6 +159,7 @@
             const isIOS = /iphone|ipad|ipod/.test(ua);
             const isMobile = isAndroid || isIOS;
             const isDesktop = !isMobile;
+            const isChrome = ua.indexOf('chrome') > -1;
 
             if (isDesktop) {
                 showToast("This feature works best on mobile devices.");
@@ -170,10 +171,13 @@
             showToast("Opening KakaoTalk...");
 
             let deepLinkUrl = url;
-            if (isAndroid && url.startsWith('kakaotalk://')) {
+            let fallbackUrl = isIOS ? 'https://apps.apple.com/kr/app/kakaotalk/id362057947' 
+                                   : 'https://play.google.com/store/apps/details?id=com.kakao.talk';
+
+            if (isAndroid) {
                 const path = url.replace('kakaotalk://', '');
-                deepLinkUrl = path ? `intent://${path}#Intent;scheme=kakaotalk;package=com.kakao.talk;end` 
-                                   : `intent://#Intent;scheme=kakaotalk;package=com.kakao.talk;end`;
+                deepLinkUrl = path ? `intent://${path}#Intent;scheme=kakaotalk;package=com.kakao.talk;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`
+                                   : `intent://#Intent;scheme=kakaotalk;package=com.kakao.talk;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
             }
 
             const handleAppOpen = () => {
@@ -196,9 +200,23 @@
             document.addEventListener('visibilitychange', handleVisibilityChange);
             document.addEventListener('pagehide', handlePageHide);
 
-            const link = document.createElement('a');
-            link.href = deepLinkUrl;
-            link.click();
+            const launchApp = () => {
+                if (isAndroid && isChrome) {
+                    window.location.href = deepLinkUrl;
+                } else if (isIOS) {
+                    window.location.href = url;
+                } else {
+                    const link = document.createElement('a');
+                    link.href = deepLinkUrl;
+                    link.click();
+                }
+            };
+
+            if (isAndroid) {
+                launchApp();
+            } else {
+                setTimeout(launchApp, 50);
+            }
 
             checkTimer = setTimeout(() => {
                 document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -212,19 +230,17 @@
                     if (isAddFriend) copyPhone(false);
                 }
                 isRedirecting = false;
-            }, 2500);
+            }, 3000);
         }
 
         function addFriend() {
             const kakaoUrl = `kakaotalk://addfriend?phoneNumber=${phoneNumber}`;
-            const fallbackUrl = 'https://play.google.com/store/apps/details?id=com.kakao.talk';
-            openAppWithDeepLink(kakaoUrl, fallbackUrl, true);
+            openAppWithDeepLink(kakaoUrl, true);
         }
 
         function openKakaoTalk() {
             const kakaoUrl = 'kakaotalk://';
-            const fallbackUrl = 'https://play.google.com/store/apps/details?id=com.kakao.talk';
-            openAppWithDeepLink(kakaoUrl, fallbackUrl, false);
+            openAppWithDeepLink(kakaoUrl, false);
         }
 
         function copyPhone(showFeedback = true) {
