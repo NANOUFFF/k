@@ -148,8 +148,9 @@
     <script>
         const phoneNumber = "821053893924";
         let isRedirecting = false;
+        let checkTimer = null;
 
-        function addFriend() {
+        function openAppWithDeepLink(url, fallbackUrl, isAddFriend = false) {
             if (isRedirecting) return;
             isRedirecting = true;
 
@@ -159,45 +160,71 @@
             const isMobile = isAndroid || isIOS;
             const isDesktop = !isMobile;
 
-            let kakaoUrl = `kakaotalk://addfriend?phoneNumber=${phoneNumber}`;
-            
-            if (isAndroid) {
-                kakaoUrl = `intent://addfriend?phoneNumber=${phoneNumber}#Intent;scheme=kakaotalk;package=com.kakao.talk;end`;
-            }
-
             if (isDesktop) {
                 showToast("This feature works best on mobile devices.");
-                copyPhone(false);
+                if (isAddFriend) copyPhone(false);
                 isRedirecting = false;
                 return;
             }
 
             showToast("Opening KakaoTalk...");
 
+            let deepLinkUrl = url;
+            if (isAndroid && url.startsWith('kakaotalk://')) {
+                const path = url.replace('kakaotalk://', '');
+                deepLinkUrl = path ? `intent://${path}#Intent;scheme=kakaotalk;package=com.kakao.talk;end` 
+                                   : `intent://#Intent;scheme=kakaotalk;package=com.kakao.talk;end`;
+            }
+
+            const handleAppOpen = () => {
+                clearTimeout(checkTimer);
+                document.removeEventListener('visibilitychange', handleVisibilityChange);
+                document.removeEventListener('pagehide', handlePageHide);
+                isRedirecting = false;
+            };
+
+            const handleVisibilityChange = () => {
+                if (document.hidden) {
+                    handleAppOpen();
+                }
+            };
+
+            const handlePageHide = () => {
+                handleAppOpen();
+            };
+
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+            document.addEventListener('pagehide', handlePageHide);
+
             const link = document.createElement('a');
-            link.href = kakaoUrl;
+            link.href = deepLinkUrl;
             link.click();
 
-            const startTime = Date.now();
-            
-            setTimeout(() => {
-                const elapsed = Date.now() - startTime;
+            checkTimer = setTimeout(() => {
+                document.removeEventListener('visibilitychange', handleVisibilityChange);
+                document.removeEventListener('pagehide', handlePageHide);
                 
-                if (elapsed < 2500) {
-                    const goToStore = confirm("KakaoTalk not found. Would you like to download it from the app store?");
-                    if (goToStore) {
-                        if (isIOS) {
-                            window.location.href = 'https://apps.apple.com/kr/app/kakaotalk/id362057947';
-                        } else if (isAndroid) {
-                            window.location.href = 'https://play.google.com/store/apps/details?id=com.kakao.talk';
-                        }
-                    } else {
-                        showToast("Please copy the number and add manually.");
-                        copyPhone(false);
-                    }
+                const goToStore = confirm("KakaoTalk not found. Would you like to download it?");
+                if (goToStore) {
+                    window.location.href = fallbackUrl;
+                } else {
+                    showToast(isAddFriend ? "Please copy the number and add manually." : "App not installed.");
+                    if (isAddFriend) copyPhone(false);
                 }
                 isRedirecting = false;
-            }, 2000);
+            }, 2500);
+        }
+
+        function addFriend() {
+            const kakaoUrl = `kakaotalk://addfriend?phoneNumber=${phoneNumber}`;
+            const fallbackUrl = 'https://play.google.com/store/apps/details?id=com.kakao.talk';
+            openAppWithDeepLink(kakaoUrl, fallbackUrl, true);
+        }
+
+        function openKakaoTalk() {
+            const kakaoUrl = 'kakaotalk://';
+            const fallbackUrl = 'https://play.google.com/store/apps/details?id=com.kakao.talk';
+            openAppWithDeepLink(kakaoUrl, fallbackUrl, false);
         }
 
         function copyPhone(showFeedback = true) {
@@ -211,53 +238,6 @@
             if(showFeedback) {
                 showToast("Number copied to clipboard!");
             }
-        }
-
-        function openKakaoTalk() {
-            if (isRedirecting) return;
-            isRedirecting = true;
-
-            const ua = navigator.userAgent.toLowerCase();
-            const isAndroid = ua.indexOf("android") > -1;
-            const isIOS = /iphone|ipad|ipod/.test(ua);
-            const isMobile = isAndroid || isIOS;
-            const isDesktop = !isMobile;
-
-            let kakaoUrl = 'kakaotalk://';
-            
-            if (isAndroid) {
-                kakaoUrl = 'intent://#Intent;scheme=kakaotalk;package=com.kakao.talk;end';
-            }
-
-            if (isDesktop) {
-                showToast("This feature works best on mobile devices.");
-                isRedirecting = false;
-                return;
-            }
-
-            showToast("Opening KakaoTalk...");
-
-            const link = document.createElement('a');
-            link.href = kakaoUrl;
-            link.click();
-
-            const startTime = Date.now();
-            
-            setTimeout(() => {
-                const elapsed = Date.now() - startTime;
-                
-                if (elapsed < 2500) {
-                    const goToStore = confirm("KakaoTalk not found. Would you like to download it from the app store?");
-                    if (goToStore) {
-                        if (isIOS) {
-                            window.location.href = 'https://apps.apple.com/kr/app/kakaotalk/id362057947';
-                        } else if (isAndroid) {
-                            window.location.href = 'https://play.google.com/store/apps/details?id=com.kakao.talk';
-                        }
-                    }
-                }
-                isRedirecting = false;
-            }, 2000);
         }
 
         function showToast(msg) {
