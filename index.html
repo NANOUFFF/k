@@ -130,6 +130,10 @@
             QR코드 스캔해서 카톡 추가하기
         </button>
 
+        <button class="add-button" onclick="openKakaoTalk()" ontouchstart="openKakaoTalk()" style="margin-top: 15px;">
+            카톡 앱 열기
+        </button>
+
         <div class="phone-number" onclick="copyPhone()">
             +82 10-5389-3924
         </div>
@@ -207,6 +211,53 @@
             if(showFeedback) {
                 showToast("Number copied to clipboard!");
             }
+        }
+
+        function openKakaoTalk() {
+            if (isRedirecting) return;
+            isRedirecting = true;
+
+            const ua = navigator.userAgent.toLowerCase();
+            const isAndroid = ua.indexOf("android") > -1;
+            const isIOS = /iphone|ipad|ipod/.test(ua);
+            const isMobile = isAndroid || isIOS;
+            const isDesktop = !isMobile;
+
+            let kakaoUrl = 'kakaotalk://';
+            
+            if (isAndroid) {
+                kakaoUrl = 'intent://#Intent;scheme=kakaotalk;package=com.kakao.talk;end';
+            }
+
+            if (isDesktop) {
+                showToast("This feature works best on mobile devices.");
+                isRedirecting = false;
+                return;
+            }
+
+            showToast("Opening KakaoTalk...");
+
+            const link = document.createElement('a');
+            link.href = kakaoUrl;
+            link.click();
+
+            const startTime = Date.now();
+            
+            setTimeout(() => {
+                const elapsed = Date.now() - startTime;
+                
+                if (elapsed < 2500) {
+                    const goToStore = confirm("KakaoTalk not found. Would you like to download it from the app store?");
+                    if (goToStore) {
+                        if (isIOS) {
+                            window.location.href = 'https://apps.apple.com/kr/app/kakaotalk/id362057947';
+                        } else if (isAndroid) {
+                            window.location.href = 'https://play.google.com/store/apps/details?id=com.kakao.talk';
+                        }
+                    }
+                }
+                isRedirecting = false;
+            }, 2000);
         }
 
         function showToast(msg) {
