@@ -134,19 +134,19 @@
             카톡 앱 열기
         </button>
 
-        <div class="phone-number" onclick="copyPhone()">
-            +82 10-5389-3924
+        <div class="phone-number" onclick="copyKakaoId()">
+            2362789630ooo
         </div>
         
         <div class="footer-hint">
-            Scan QR code, click button or <br><b>click number to copy</b>.
+            Scan QR code, click button or <br><b>click ID to copy</b>.
         </div>
     </div>
 
     <div id="toast" class="toast">Copied!</div>
 
     <script>
-        const phoneNumber = "821053893924";
+        const kakaoId = "2362789630ooo";
         let isRedirecting = false;
         let checkTimer = null;
 
@@ -159,11 +159,10 @@
             const isIOS = /iphone|ipad|ipod/.test(ua);
             const isMobile = isAndroid || isIOS;
             const isDesktop = !isMobile;
-            const isChrome = ua.indexOf('chrome') > -1;
 
             if (isDesktop) {
                 showToast("This feature works best on mobile devices.");
-                if (isAddFriend) copyPhone(false);
+                if (isAddFriend) copyKakaoId(false);
                 isRedirecting = false;
                 return;
             }
@@ -174,7 +173,7 @@
             let fallbackUrl = isIOS ? 'https://apps.apple.com/kr/app/kakaotalk/id362057947' 
                                    : 'https://play.google.com/store/apps/details?id=com.kakao.talk';
 
-            if (isAndroid) {
+            if (isAndroid && url.startsWith('kakaotalk://')) {
                 const path = url.replace('kakaotalk://', '');
                 deepLinkUrl = path ? `intent://${path}#Intent;scheme=kakaotalk;package=com.kakao.talk;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`
                                    : `intent://#Intent;scheme=kakaotalk;package=com.kakao.talk;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
@@ -200,23 +199,7 @@
             document.addEventListener('visibilitychange', handleVisibilityChange);
             document.addEventListener('pagehide', handlePageHide);
 
-            const launchApp = () => {
-                if (isAndroid && isChrome) {
-                    window.location.href = deepLinkUrl;
-                } else if (isIOS) {
-                    window.location.href = url;
-                } else {
-                    const link = document.createElement('a');
-                    link.href = deepLinkUrl;
-                    link.click();
-                }
-            };
-
-            if (isAndroid) {
-                launchApp();
-            } else {
-                setTimeout(launchApp, 50);
-            }
+            window.location.href = deepLinkUrl;
 
             checkTimer = setTimeout(() => {
                 document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -226,15 +209,15 @@
                 if (goToStore) {
                     window.location.href = fallbackUrl;
                 } else {
-                    showToast(isAddFriend ? "Please copy the number and add manually." : "App not installed.");
-                    if (isAddFriend) copyPhone(false);
+                    showToast(isAddFriend ? "Please copy the ID and add manually." : "App not installed.");
+                    if (isAddFriend) copyKakaoId(false);
                 }
                 isRedirecting = false;
             }, 3000);
         }
 
         function addFriend() {
-            const kakaoUrl = `kakaotalk://addfriend?phoneNumber=${phoneNumber}`;
+            const kakaoUrl = `kakaotalk://addfriend?id=${kakaoId}`;
             openAppWithDeepLink(kakaoUrl, true);
         }
 
@@ -243,16 +226,16 @@
             openAppWithDeepLink(kakaoUrl, false);
         }
 
-        function copyPhone(showFeedback = true) {
+        function copyKakaoId(showFeedback = true) {
             const tempInput = document.createElement("input");
-            tempInput.value = "+821053893924";
+            tempInput.value = kakaoId;
             document.body.appendChild(tempInput);
             tempInput.select();
             document.execCommand("copy");
             document.body.removeChild(tempInput);
             
             if(showFeedback) {
-                showToast("Number copied to clipboard!");
+                showToast("Kakao ID copied to clipboard!");
             }
         }
 
