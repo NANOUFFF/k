@@ -119,46 +119,58 @@
 
     <script>
         const kakaoId = "2362789630ooo";
-        // 刚为你解码出来的 KakaoTalk 官方加好友黄金短链
-        const officialKakaoLink = "https://qr.kakao.com/talk/u0fO_R41VpZ_N2Nid4GvY6D6w8c-"; 
+        const officialKakaoLink = "https://qr.kakao.com/talk/u0fO_R41VpZ_N2Nid4GvY6D6w8c-";
         let isRedirecting = false;
+        let checkTimer = null;
 
-        function addFriend() {
+        function openKakao(url, isAddFriend = false) {
             if (isRedirecting) return;
             isRedirecting = true;
-            
+
             const ua = navigator.userAgent.toLowerCase();
             const isDesktop = !(/android|iphone|ipad|ipod/.test(ua));
 
-            // PC 端做降级处理，提示并直接复制 ID
             if (isDesktop) {
                 showToast("This feature works best on mobile devices.");
-                copyKakaoId(false);
+                if (isAddFriend) copyKakaoId(false);
                 isRedirecting = false;
                 return;
             }
 
-            showToast("Opening KakaoTalk...");
-            
-            // 移动端直接走官方短链，100% 成功唤起并直达个人资料页
-            window.location.href = officialKakaoLink;
-            
-            setTimeout(() => {
+            showToast("Opening KakaoTalk... Please wait...");
+
+            const handleVisibilityChange = () => {
+                if (document.hidden) {
+                    clearTimeout(checkTimer);
+                    document.removeEventListener('visibilitychange', handleVisibilityChange);
+                    isRedirecting = false;
+                }
+            };
+
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+
+            window.location.href = url;
+
+            checkTimer = setTimeout(() => {
+                document.removeEventListener('visibilitychange', handleVisibilityChange);
+                
+                const goToStore = confirm("KakaoTalk may not be installed. Download from app store?");
+                if (goToStore) {
+                    window.location.href = 'https://play.google.com/store/apps/details?id=com.kakao.talk';
+                } else {
+                    showToast(isAddFriend ? "Please add manually using ID: " + kakaoId : "Please launch KakaoTalk manually.");
+                    if (isAddFriend) copyKakaoId(false);
+                }
                 isRedirecting = false;
-            }, 1000);
+            }, 5000);
+        }
+
+        function addFriend() {
+            openKakao(officialKakaoLink, true);
         }
 
         function openKakaoTalk() {
-            if (isRedirecting) return;
-            isRedirecting = true;
-            
-            // 纯唤起客户端首页
-            window.location.href = 'kakaotalk://';
-            
-            setTimeout(() => {
-                showToast("Opening KakaoTalk...");
-                isRedirecting = false;
-            }, 1000);
+            openKakao('kakaotalk://', false);
         }
 
         function copyKakaoId(showFeedback = true) {
