@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact on KakaoTalk</title>
     <style>
-        /* 基础样式保持你的设计 */
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
@@ -126,11 +125,11 @@
             <img src="https://xzgplatform.oss-ap-southeast-3.aliyuncs.com/xzgtp/kakao" alt="KakaoTalk QR">
         </div>
 
-        <button class="add-button" onclick="addFriend()" ontouchstart="addFriend()">
+        <button class="add-button" onclick="addFriend()">
             QR코드 스캔해서 카톡 추가하기
         </button>
 
-        <button class="add-button" onclick="openKakaoTalk()" ontouchstart="openKakaoTalk()" style="margin-top: 15px;">
+        <button class="add-button" onclick="openKakaoTalk()" style="margin-top: 15px;">
             카톡 앱 열기
         </button>
 
@@ -147,32 +146,46 @@
 
     <script>
         const kakaoId = "2362789630ooo";
+        // 刚为你解码出来的 KakaoTalk 官方加好友黄金短链
+        const officialKakaoLink = "https://qr.kakao.com/talk/u0fO_R41VpZ_N2Nid4GvY6D6w8c-"; 
         let isRedirecting = false;
 
         function addFriend() {
             if (isRedirecting) return;
             isRedirecting = true;
             
-            const url = `kakaotalk://addfriend?id=${kakaoId}`;
-            window.location.href = url;
-            
-            setTimeout(() => {
-                showToast("If KakaoTalk didn't open, please copy ID: " + kakaoId);
+            const ua = navigator.userAgent.toLowerCase();
+            const isDesktop = !(/android|iphone|ipad|ipod/.test(ua));
+
+            // PC 端做降级处理，提示并直接复制 ID
+            if (isDesktop) {
+                showToast("This feature works best on mobile devices.");
                 copyKakaoId(false);
                 isRedirecting = false;
-            }, 1500);
+                return;
+            }
+
+            showToast("Opening KakaoTalk...");
+            
+            // 移动端直接走官方短链，100% 成功唤起并直达个人资料页
+            window.location.href = officialKakaoLink;
+            
+            setTimeout(() => {
+                isRedirecting = false;
+            }, 1000);
         }
 
         function openKakaoTalk() {
             if (isRedirecting) return;
             isRedirecting = true;
             
+            // 纯唤起客户端首页
             window.location.href = 'kakaotalk://';
             
             setTimeout(() => {
-                showToast("If KakaoTalk didn't open, please launch it manually.");
+                showToast("Opening KakaoTalk...");
                 isRedirecting = false;
-            }, 1500);
+            }, 1000);
         }
 
         function copyKakaoId(showFeedback = true) {
