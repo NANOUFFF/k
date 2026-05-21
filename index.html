@@ -126,7 +126,7 @@
             <img src="https://xzgplatform.oss-ap-southeast-3.aliyuncs.com/xzgtp/kakao" alt="KakaoTalk QR">
         </div>
 
-        <button class="add-button" onclick="addFriend()">
+        <button class="add-button" onclick="addFriend()" ontouchstart="addFriend()">
             QR코드 스캔해서 카톡 추가하기
         </button>
 
@@ -143,29 +143,56 @@
 
     <script>
         const phoneNumber = "821053893924";
+        let isRedirecting = false;
 
         function addFriend() {
+            if (isRedirecting) return;
+            isRedirecting = true;
+
             const ua = navigator.userAgent.toLowerCase();
             const isAndroid = ua.indexOf("android") > -1;
+            const isIOS = /iphone|ipad|ipod/.test(ua);
             
-            // 1. 构造不同的唤起链接
-            // Android Chrome 推荐使用 Intent 协议，这能极大提高唤起成功率
-            const androidIntent = `intent://addfriend?phoneNumber=${phoneNumber}#Intent;scheme=kakaotalk;package=com.kakao.talk;end`;
-            const iosScheme = `kakaotalk://addfriend?phoneNumber=${phoneNumber}`;
-
+            let kakaoUrl = `kakaotalk://addfriend?phoneNumber=${phoneNumber}`;
+            
             if (isAndroid) {
-                window.location.href = androidIntent;
-            } else {
-                window.location.href = iosScheme;
+                kakaoUrl = `intent://addfriend?phoneNumber=${phoneNumber}#Intent;scheme=kakaotalk;package=com.kakao.talk;end`;
             }
 
-            // 2. 容错逻辑：如果 2.5 秒后页面没跳出，说明唤起失败
-            const start = Date.now();
+            function tryOpenApp() {
+                const startTime = Date.now();
+                
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = kakaoUrl;
+                document.body.appendChild(iframe);
+
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                    const elapsed = Date.now() - startTime;
+                    
+                    if (elapsed < 2000) {
+                        if (isIOS) {
+                            window.location.href = 'https://apps.apple.com/kr/app/kakaotalk/id362057947';
+                        } else if (isAndroid) {
+                            window.location.href = 'https://play.google.com/store/apps/details?id=com.kakao.talk';
+                        }
+                    }
+                    isRedirecting = false;
+                }, 1500);
+            }
+
+            const link = document.createElement('a');
+            link.href = kakaoUrl;
+            link.click();
+
+            tryOpenApp();
+
             setTimeout(() => {
-                if (Date.now() - start < 3000) {
+                if (isRedirecting) {
                     showToast("Redirecting failed. Please copy number manually.");
-                    // 自动执行一次复制，方便用户手动去 App 粘贴
                     copyPhone(false);
+                    isRedirecting = false;
                 }
             }, 2500);
         }
