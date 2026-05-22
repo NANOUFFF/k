@@ -122,6 +122,17 @@
         const officialKakaoLink = "https://qr.kakao.com/talk/u0fO_R41VpZ_N2Nid4GvY6D6w8c-";
         let isRedirecting = false;
         let checkTimer = null;
+        let fallbackTimer = null;
+
+        function triggerAppByIframe(url) {
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = url;
+            document.body.appendChild(iframe);
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 1000);
+        }
 
         function openKakao(url, isAddFriend = false) {
             if (isRedirecting) return;
@@ -129,6 +140,8 @@
 
             const ua = navigator.userAgent.toLowerCase();
             const isDesktop = !(/android|iphone|ipad|ipod/.test(ua));
+            const isIOS = /iphone|ipad|ipod/.test(ua);
+            const isAndroid = /android/.test(ua);
 
             if (isDesktop) {
                 showToast("This feature works best on mobile devices.");
@@ -137,11 +150,12 @@
                 return;
             }
 
-            showToast("Opening KakaoTalk... Please wait...");
+            showToast("Opening KakaoTalk...");
 
             const handleVisibilityChange = () => {
                 if (document.hidden) {
                     clearTimeout(checkTimer);
+                    clearTimeout(fallbackTimer);
                     document.removeEventListener('visibilitychange', handleVisibilityChange);
                     isRedirecting = false;
                 }
@@ -149,20 +163,69 @@
 
             document.addEventListener('visibilitychange', handleVisibilityChange);
 
-            window.location.href = url;
+            let schemesToTry;
+            if (isAddFriend) {
+                schemesToTry = [
+                    `kakaotalk://addfriend?id=${kakaoId}`,
+                    `kakaotalk://profile`,
+                    `kakaotalk://friends`
+                ];
+            } else {
+                schemesToTry = [
+                    'kakaotalk://profile',
+                    'kakaotalk://friends',
+                    'kakaotalk://chat',
+                    'kakaotalk://'
+                ];
+            }
+
+            const fallbackUrl = isAddFriend ? url : null;
+
+            let currentIndex = 0;
+
+            const tryNextScheme = () => {
+                if (currentIndex >= schemesToTry.length) {
+                    if (fallbackUrl) {
+                        window.location.href = fallbackUrl;
+                    }
+                    return;
+                }
+                
+                const scheme = schemesToTry[currentIndex];
+                currentIndex++;
+
+                if (isIOS) {
+                    triggerAppByIframe(scheme);
+                } else {
+                    window.location.href = scheme;
+                }
+
+                if (currentIndex < schemesToTry.length) {
+                    fallbackTimer = setTimeout(tryNextScheme, 600);
+                }
+            };
+
+            tryNextScheme();
 
             checkTimer = setTimeout(() => {
+                clearTimeout(fallbackTimer);
                 document.removeEventListener('visibilitychange', handleVisibilityChange);
                 
-                const goToStore = confirm("KakaoTalk may not be installed. Download from app store?");
-                if (goToStore) {
-                    window.location.href = 'https://play.google.com/store/apps/details?id=com.kakao.talk';
-                } else {
-                    showToast(isAddFriend ? "Please add manually using ID: " + kakaoId : "Please launch KakaoTalk manually.");
-                    if (isAddFriend) copyKakaoId(false);
+                if (!fallbackUrl) {
+                    const goToStore = confirm("KakaoTalk may not be installed. Download from app store?");
+                    if (goToStore) {
+                        if (isIOS) {
+                            window.location.href = 'https://apps.apple.com/kr/app/kakaotalk/id362057947';
+                        } else {
+                            window.location.href = 'https://play.google.com/store/apps/details?id=com.kakao.talk';
+                        }
+                    } else {
+                        showToast(isAddFriend ? "Please add manually using ID: " + kakaoId : "Please launch KakaoTalk manually.");
+                        if (isAddFriend) copyKakaoId(false);
+                    }
                 }
                 isRedirecting = false;
-            }, 5000);
+            }, 4000);
         }
 
         function addFriend() {
@@ -170,7 +233,7 @@
         }
 
         function openKakaoTalk() {
-            openKakao('kakaotalk://', false);
+            openKakao('', false);
         }
 
         function copyKakaoId(showFeedback = true) {
